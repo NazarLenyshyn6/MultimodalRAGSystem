@@ -1,0 +1,12 @@
+README.md
+setup.py
+DataIngestion/__init__.py
+DataIngestion/fetch.py
+DataIngestion/fetching_result.py
+DataIngestion/perse.py
+Internals/__init__.py
+Internals/utils.py
+Multimodal_RAG_system.egg-info/PKG-INFO
+Multimodal_RAG_system.egg-info/SOURCES.txt
+Multimodal_RAG_system.egg-info/dependency_links.txt
+Multimodal_RAG_system.egg-info/top_level.txt
