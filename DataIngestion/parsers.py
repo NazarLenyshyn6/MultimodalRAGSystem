@@ -7,19 +7,23 @@ import pydantic
 from bs4 import BeautifulSoup
 
 from DataIngestion import fetching_result
-from DataIngestion import text_parsing_configs
-from DataIngestion import text_parsing_tags
+from DataIngestion import parsing_configs
+from DataIngestion import parsing_tags
 from Internals import utils
 
-class TextParserI(ABC):
+class ParserI(ABC):
     """Interface for text parsers that extract structured data from raw website content."""
 
     @abstractmethod
-    def extract(self, website_responce: fetching_result.FetchResultI, parser_config: text_parsing_configs.TextParserConfig) -> text_parsing_configs.ParsedText:
+    def extract(
+        self, 
+        website_responce: fetching_result.FetchResultI, 
+        parser_config: parsing_configs.ParserConfig
+        ) -> parsing_configs.ParsedData:
         ...
 
 
-class BS4TextParser(pydantic.BaseModel,TextParserI):
+class BS4Parser(pydantic.BaseModel,ParserI):
     """Concrete implementation of TextParserI using BeautifulSoup4 to extract HTML content.
 
     Attributes:
@@ -32,7 +36,11 @@ class BS4TextParser(pydantic.BaseModel,TextParserI):
     parser: Literal['html.parser', 'lxml', 'html5lib'] = pydantic.Field(default='html.parser')
 
     @override
-    def extract(self, website_response: fetching_result.FetchResultI, parser_config: text_parsing_configs.TextParserConfig) -> text_parsing_configs.ParsedText:
+    def extract(
+        self, 
+        website_response: fetching_result.FetchResultI, 
+        parser_config: parsing_configs.ParserConfig
+        ) -> parsing_configs.ParsedData:
         """
         Extracts tagged content from HTML using BeautifulSoup based on the parsing configuration.
 
@@ -56,18 +64,16 @@ class BS4TextParser(pydantic.BaseModel,TextParserI):
                 ],
             required_dtypes=[
                 fetching_result.FetchResultI, 
-                text_parsing_configs.TextParserConfig
+                parsing_configs.ParserConfig
                 ]
                         )
         if website_response.success == False:
             raise RuntimeError("Cannot parse HTML: website_response.success is False.")
-        if not all(isinstance(tag, text_parsing_tags.BS4Tag) for tag in parser_config.tags):
+        if not all(isinstance(tag, parsing_tags.BS4Tag) for tag in parser_config.tags):
             raise TypeError("All tags in parser_config must be instances of BS4Tag.")
         soup = BeautifulSoup(website_response.data, self.parser)
         parsed_data = {}
         for parsed_tag, tag in parser_config:
             name, attrs, recursive, limit = tag.construct().values()
-            raw_data = soup.find_all(name=name, attrs=attrs, recursive=recursive, limit=limit)
-            data = [d.get(tag.extract) for d in raw_data] if tag.extract else [d.text for d in raw_data]
-            parsed_data[parsed_tag] = data
-        return text_parsing_configs.ParsedText(url=website_response.url, parsed_data=parsed_data)
+            parsed_data[parsed_tag] = soup.find_all(name=name, attrs=attrs, recursive=recursive, limit=limit)
+        return parsing_configs.ParsedData(url=website_response.url, parsed_data=parsed_data)

@@ -5,6 +5,30 @@ from abc import ABC, abstractmethod
 import pydantic
 
 ConstructedBS4Tag = Dict[str, Union[str, dict[str, str], bool, int, None]]
+HTMLTag = Literal[
+    'a', 'abbr', 'address', 'area', 'article', 'aside', 'audio',
+    'b', 'base', 'bdi', 'bdo', 'blockquote', 'body', 'br', 'button',
+    'canvas', 'caption', 'cite', 'code', 'col', 'colgroup',
+    'data', 'datalist', 'dd', 'del', 'details', 'dfn', 'dialog', 'div', 'dl', 'dt',
+    'em', 'embed',
+    'fieldset', 'figcaption', 'figure', 'footer', 'form',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hr', 'html',
+    'i', 'iframe', 'img', 'input', 'ins',
+    'kbd',
+    'label', 'legend', 'li', 'link',
+    'main', 'map', 'mark', 'meta', 'meter',
+    'nav', 'noscript',
+    'object', 'ol', 'optgroup', 'option', 'output',
+    'p', 'param', 'picture', 'pre', 'progress',
+    'q',
+    'rp', 'rt', 'ruby',
+    's', 'samp', 'script', 'section', 'select', 'small', 'source', 'span', 'strong', 'style', 'sub', 'summary', 'sup',
+    'table', 'tbody', 'td', 'template', 'textarea', 'tfoot', 'th', 'thead', 'time', 'title', 'tr', 'track',
+    'u', 'ul',
+    'var', 'video',
+    'wbr'
+]
+
 
 class TagI(ABC):
     """
@@ -28,29 +52,14 @@ class BS4Tag(pydantic.BaseModel, TagI):
 
     Attributes:
         tag: The HTML tag name to search for (e.g., 'h1', 'p', 'div').
-            Only commonly text-based tags are allowed to enforce semantic correctness. 
         attrs: A dictionary of HTML attributes used to filter matching tags. 
         recursive: Whether to search for tags recursively within children.. 
         limit: Maximum number of results to return. If None, all matches are returned. 
     """
-    tag: Literal['p', 'h1', 'h2', 
-                 'h3', 'h4', 'h5', 
-                 'h6','span','div', 
-                 'a', 'li', 'strong', 
-                 'b','em', 'i',
-                 'blockquote','label', 'td', 
-                 'th','caption', 'summary',
-                 'code', 'pre', 'small',
-                 'mark', 'cite', 'q', 
-                 'abbr', 'time', 'figcaption', 
-                 'article', 'section', 
-                 'header', 'footer', 'aside', 
-                 'main'
-                 ]
+    tag: HTMLTag
     attrs: Optional[Dict[str, str]] = pydantic.Field(default=None)
     recursive: bool = pydantic.Field(default=True)
     limit: Optional[int] = pydantic.Field(default=None)
-    extract: Optional[str] = pydantic.Field(default=None)
 
     def __str__(self):
         return repr(self)
@@ -64,8 +73,9 @@ class BS4Tag(pydantic.BaseModel, TagI):
         Returns:
             Dict[str, Uniton[name, tag, attrs, recursive, limit]]
         """
-        return {'name': self.tag, 
-                'attrs': self.attrs or {}, 
-                'recursive': self.recursive, 
-                'limit': self.limit
-                }
+        return {
+            'name': self.tag, 
+            'attrs': self.attrs or {}, 
+            'recursive': self.recursive, 
+            'limit': self.limit
+            }

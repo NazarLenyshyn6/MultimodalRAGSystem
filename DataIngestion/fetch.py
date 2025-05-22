@@ -14,7 +14,7 @@ class FetcherI(ABC):
     """Interface class for website fetcher"""
 
     @abstractmethod
-    def fetch(self, url: str) -> fetching_result.FetchResult:
+    def fetch(self, url: str, *fetching_args, **fetching_kwargs) -> fetching_result.FetchResult:
         ...
 
 class RequestsFetcher(FetcherI):
@@ -40,8 +40,6 @@ class RequestsFetcher(FetcherI):
         if isinstance(timeout, tuple) and len(timeout) == 2 and all(isinstance(t, (int, float)) for  t  in timeout):
                 return
         raise TypeError("Timeout must be a single int/float or a tuple of two int/float values.")
-
-
     
     @override
     def fetch(

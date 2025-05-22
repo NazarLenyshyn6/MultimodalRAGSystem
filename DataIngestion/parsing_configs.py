@@ -10,10 +10,10 @@ from typing import Optional, Literal, Dict, Union
 from typing_extensions import override
 from abc import ABC, abstractmethod
 
-from DataIngestion import text_parsing_tags
+from DataIngestion import parsing_tags
 
 
-class TextParserConfig(pydantic.BaseModel):
+class ParserConfig(pydantic.BaseModel):
     """
     Configuration container for text parser tag mappings.
 
@@ -32,7 +32,7 @@ class TextParserConfig(pydantic.BaseModel):
     """
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
     parsed_tags: List[str]
-    tags: List[text_parsing_tags.TagI]
+    tags: List[parsing_tags.TagI]
 
     @pydantic.model_validator(mode='after')
     def validate_parsed_tags_tags(cls, values):
@@ -51,13 +51,13 @@ class TextParserConfig(pydantic.BaseModel):
         return values
 
     def __repr__(self) -> str:
-        return f'TextParserConfig(parsed_tags={self.parsed_tags}, tags={[tag_.tag for tag_ in self.tags]})'
+        return f'ParserConfig(parsed_tags={self.parsed_tags}, tags={[tag_.tag for tag_ in self.tags]})'
     
     def __iter__(self):
         return zip(self.parsed_tags, self.tags)
     
 
-class ParsedText:
+class ParsedData:
     """Structured result of parsing text from a given URL.
 
     Attributes:
@@ -77,5 +77,5 @@ class ParsedText:
             setattr(self, parsed_tag.lower(), data)
 
     def __repr__(self):
-        return f'ParsedText(url={self.url}, parsed_tags={self.parsed_tags})'
+        return f'ParsedData(url={self.url}, parsed_tags={self.parsed_tags})'
     
