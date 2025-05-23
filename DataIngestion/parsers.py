@@ -1,3 +1,4 @@
+
 from typing import Literal
 from typing_extensions import override
 from abc import ABC, abstractmethod
@@ -10,6 +11,7 @@ from DataIngestion import fetching_result
 from DataIngestion import parsing_configs
 from DataIngestion import parsing_tags
 from Internals import utils
+
 
 class ParserI(ABC):
     """Interface for text parsers that extract structured data from raw website content."""

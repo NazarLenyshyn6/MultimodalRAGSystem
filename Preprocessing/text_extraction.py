@@ -1,5 +1,6 @@
 
 
+from typing_extensions import override
 from typing import List, Any
 from abc import ABC, abstractmethod
 
@@ -28,6 +29,7 @@ class SimpleBS4TextExtractor(pydantic.BaseModel, TextExtractorI):
     strip: bool  = pydantic.Field(default = True)
     join_symbol: str = '\n'
 
+    @override
     def extract_text_from_elements(self, elements: List[bs4.element.Tag]) -> str:
         """Extract text from a list of bs4.element.Tag objects.
 

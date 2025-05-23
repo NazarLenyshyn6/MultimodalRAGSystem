@@ -1,4 +1,5 @@
 
+from  typing_extensions import override
 from abc import ABC, abstractmethod
 from PIL import Image
 from io import BytesIO
@@ -7,6 +8,7 @@ import pydantic
 
 from DataIngestion import fetch
 from Internals import utils
+
 
 class LoadedImage:
     """ Wrapper for a loaded image along with its source URL.
@@ -36,6 +38,7 @@ class ImageLoaderI(ABC):
         ) -> None | LoadedImage:
         ...
 
+
 class RequestsImageLoader(pydantic.BaseModel, ImageLoaderI):
     """ Image loader implementation that uses the `RequestsFetcher` to fetch image data
         and PIL to load the image from bytes.
@@ -49,6 +52,7 @@ class RequestsImageLoader(pydantic.BaseModel, ImageLoaderI):
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
     fetcher: fetch.RequestsFetcher = pydantic.Field(default_factory=fetch.RequestsFetcher)
 
+    @override
     def load(
             self, 
             url: str, 
@@ -90,4 +94,9 @@ class RequestsImageLoader(pydantic.BaseModel, ImageLoaderI):
             if handle_exception:
                 return None
             raise RuntimeError("Cannot fetch image: website_response.success is False.")
-        return LoadedImage(url=url, image=Image.open(BytesIO(image_responce.response.content)))
+        try:
+            return LoadedImage(url=url, image=Image.open(BytesIO(image_responce.response.content)))
+        except Exception as e:
+            if handle_exception:
+                return None
+            raise e
