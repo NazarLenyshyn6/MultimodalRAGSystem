@@ -1,11 +1,11 @@
 """Data transfer objects for encapsulating the results of website fetch operations."""
 
-
 from typing import Optional, Any, Protocol, runtime_checkable
 from datetime import datetime
 
 import pydantic
 import  requests
+
 
 @runtime_checkable
 class FetchResultI(Protocol):
@@ -20,7 +20,7 @@ class FetchResultI(Protocol):
             self, 
             success: bool,
             status_code: int,
-            responce: requests.models.Response,
+            responce: Any,
             data: Optional[str],
             url: str,
             headers: Optional[dict],
@@ -30,6 +30,7 @@ class FetchResultI(Protocol):
             ) -> None:
         raise NotImplementedError
     
+
 class FetchResult(pydantic.BaseModel):
     """
     Data Transfer Object for the result of a web fetch operation.
@@ -37,6 +38,7 @@ class FetchResult(pydantic.BaseModel):
     Attributes:
         success: Whether the fetch was successful.
         url: The URL that was fetched.
+        responce: Request responce.
         data: The main body of the response in string format.
         status_code: HTTP status code returned by the server.
         headers: Response headers.

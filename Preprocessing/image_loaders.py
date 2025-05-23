@@ -6,7 +6,7 @@ from io import BytesIO
 import pydantic
 
 from DataIngestion import fetch
-
+from Internals import utils
 
 class LoadedImage:
     """ Wrapper for a loaded image along with its source URL.
@@ -27,7 +27,13 @@ class LoadedImage:
 class ImageLoaderI(ABC):
     """Interface class for image loaders."""
     @abstractmethod
-    def load(self, img_url: str, handle_exception: bool, *fetching_args, **fetching_kwargs) -> None | LoadedImage:
+    def load(
+        self, 
+        img_url: str, 
+        handle_exception: bool, 
+        *fetching_args, 
+        **fetching_kwargs
+        ) -> None | LoadedImage:
         ...
 
 class RequestsImageLoader(pydantic.BaseModel, ImageLoaderI):
@@ -69,6 +75,7 @@ class RequestsImageLoader(pydantic.BaseModel, ImageLoaderI):
         Returns:
             LoadedImage or None: LoadedImage instance on success, None if failure and handle_exception is True.
         """
+        utils.validate_dtypes([url], ['url'], [str])
         if not url.startswith('http'):
             if handle_exception:
                 return None

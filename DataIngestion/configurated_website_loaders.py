@@ -6,7 +6,6 @@ These loaders are fully set up with fetchers, parsers, and parsing configuration
 allowing quick integration without additional setup.
 """
 
-
 from DataIngestion import fetch
 from DataIngestion import parsing_tags 
 from DataIngestion import parsing_configs

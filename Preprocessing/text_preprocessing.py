@@ -6,6 +6,8 @@ from abc import ABC, abstractmethod
 import bs4
 import pydantic
 
+from Internals import utils
+
 
 class TextExtractorI(ABC):
     """Interface class for text extractor."""
@@ -39,10 +41,8 @@ class SimpleBS4TextExtractor(pydantic.BaseModel, TextExtractorI):
             str: Extracted and concatenated text.
         """
         text = []
-        if not isinstance(elements, list):
-            raise TypeError('Elements must be a list of tags.')
+        utils.validate_dtypes([elements], ['elements'], [list])
         for tag in elements:
-            if not isinstance(tag,  bs4.element.Tag):
-                raise TypeError('All tags must be of type bs4.element.Tag')
+            utils.validate_dtypes([tag], ['tag'],[bs4.element.Tag])
             text.append(tag.get_text(separator=self.separator, strip=self.strip))
         return self.join_symbol.join(text)

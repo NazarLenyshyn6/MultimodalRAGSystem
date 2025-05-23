@@ -11,10 +11,14 @@ TimeoutType = Union[int, float, Tuple[Union[int, float], Union[int, float]]]
 
 
 class FetcherI(ABC):
-    """Interface class for website fetcher"""
+    """Interface class for website fetcher."""
 
     @abstractmethod
-    def fetch(self, url: str, *fetching_args, **fetching_kwargs) -> fetching_result.FetchResult:
+    def fetch(self, 
+              url: str, 
+              *fetching_args, 
+              **fetching_kwargs
+              ) -> fetching_result.FetchResultI:
         ...
 
 class RequestsFetcher(FetcherI):
