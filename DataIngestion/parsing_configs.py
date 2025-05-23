@@ -79,3 +79,10 @@ class ParsedData:
     def __repr__(self):
         return f'ParsedData(url={self.url}, parsed_tags={self.parsed_tags})'
     
+    def get_all(self):
+        """Returns list of all extracted data."""
+        all_data = []
+        for parsed_tag in self.parsed_tags:
+            all_data += getattr(self, parsed_tag.lower())
+        return all_data
+    

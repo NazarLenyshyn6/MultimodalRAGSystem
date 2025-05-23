@@ -5,6 +5,7 @@ from typing import Optional, Any, Protocol, runtime_checkable
 from datetime import datetime
 
 import pydantic
+import  requests
 
 @runtime_checkable
 class FetchResultI(Protocol):
@@ -19,6 +20,7 @@ class FetchResultI(Protocol):
             self, 
             success: bool,
             status_code: int,
+            responce: requests.models.Response,
             data: Optional[str],
             url: str,
             headers: Optional[dict],
@@ -42,8 +44,10 @@ class FetchResult(pydantic.BaseModel):
         timestamp: Time when the fetch occurred.
         meta: Additional metadata.
     """
+    model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
     success: bool 
     url: str
+    response: Optional[requests.models.Response] = pydantic.Field(default=None, repr=False)
     status_code: Optional[int] = pydantic.Field(default=None, repr=False)
     data: Optional[str] = pydantic.Field(default=None, repr=False)
     headers: Optional[dict] = pydantic.Field(default=None, repr=False)
@@ -57,6 +61,7 @@ class FetchResult(pydantic.BaseModel):
             f"  success: {self.success},\n"
             f"  status_code: {self.status_code},\n"
             f"  url: {self.url},\n"
+            f"  responce: {self.response},\n"
             f"  data: {self.data},\n"
             f"  headers: {self.headers},\n"
             f"  error_message: {self.error_message},\n"

@@ -93,6 +93,7 @@ class RequestsFetcher(FetcherI):
             return fetching_result.FetchResult(
                 success=True,
                 url=url,
+                response=response,
                 data=response.text,
                 status_code=response.status_code,
                 headers=response.headers,
