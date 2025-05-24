@@ -93,6 +93,11 @@ class ChoromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
         cls._to_base_document[document.type] = to_base_document
 
     @override
+    def clean(self) -> None:
+        """Clears the vector store, removing all stored documents and embeddings."""
+        self.vectorstore._collection.delete()
+
+    @override
     def add_documents(self, 
                       documents: list[schema.BaseDocument], 
                       embeddings: np.ndarray

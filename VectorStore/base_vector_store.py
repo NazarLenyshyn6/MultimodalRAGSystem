@@ -12,6 +12,10 @@ class VectorStoreI(ABC):
                       embeddings: np.ndarray
                       ) -> None:
             ...
+
+    @abstractmethod
+    def clean(self) -> None:
+         ...
     
     @abstractmethod
     def similarity_search(self, 
