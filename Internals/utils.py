@@ -1,6 +1,7 @@
 """Contains different utility functions."""  
 
 import hashlib
+import uuid
 
 def validate_dtypes(inputs, input_names, required_dtypes):
     """Validate if inputs corresponds to required data types.
@@ -18,6 +19,18 @@ def validate_dtypes(inputs, input_names, required_dtypes):
             raise TypeError(f"{input_name} must be of type {required_dtype}. Got instead: {type(input)}")
         
 
-def compute_hash_from_text(text: str) -> str:
-    validate_dtypes([text], ['text'], [str])
-    return hashlib.sha256(text.encode('utf-8')).hexdigest()         
+def generate_unique_doc_id(content: str, metadata: dict = None) -> str:
+    """Generate a unique document identifier based on content, metadata, and a random salt.
+
+    Args:
+        content: The main textual content of the document.. 
+        metadata: Additional metadata to incorporate into the hash.. 
+
+    Returns:
+        str:  A unique document identifier in the format: "<hash>-<uuid>".
+    """
+    combined = content + str(sorted(metadata.items()) if metadata else '')
+    base_hash = hashlib.sha256(combined.encode('utf-8')).hexdigest()
+    salt = str(uuid.uuid4())
+    return f"{base_hash}-{salt}"
+      

@@ -1,3 +1,5 @@
+"""."""
+
 from typing import Any, Union, Tuple
 from abc import ABC, abstractmethod
 from typing_extensions import override
@@ -6,9 +8,9 @@ import requests
 
 from DataIngestion import fetching_result
 from Internals import utils
+from Internals.logger import logger
 
 TimeoutType = Union[int, float, Tuple[Union[int, float], Union[int, float]]]
-
 
 class FetcherI(ABC):
     """Interface class for website fetcher."""

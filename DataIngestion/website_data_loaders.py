@@ -13,7 +13,11 @@ class DataLoaderI(ABC):
     "Interface for all data loaders that transform a URL into parsed data."
 
     @abstractmethod
-    def load(self, url: str, *args, **kwargs):
+    def load(self, 
+             url: str, 
+             *args, 
+             **kwargs
+             ) -> parsing_configs.ParsedData:
         ...
 
 class ScrapedDataLoader(pydantic.BaseModel, DataLoaderI):
@@ -47,7 +51,11 @@ class ScrapedDataLoader(pydantic.BaseModel, DataLoaderI):
                 )
     
     @override
-    def load(self, url: str, *fetching_args, **fetching_kwargs) -> parsing_configs.ParsedData:
+    def load(self, 
+             url: str, 
+             *fetching_args, 
+             **fetching_kwargs
+             ) -> parsing_configs.ParsedData:
         """ Loads and parses data from a URL using the configured fetcher and parser.
 
         Steps:

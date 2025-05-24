@@ -12,6 +12,7 @@ from Internals import utils
 
 class TextExtractorI(ABC):
     """Interface class for text extractor."""
+
     @abstractmethod
     def extract_text_from_elements(self, elements: List[Any]) -> str:
         ...
@@ -43,8 +44,16 @@ class SimpleBS4TextExtractor(pydantic.BaseModel, TextExtractorI):
             str: Extracted and concatenated text.
         """
         text = []
-        utils.validate_dtypes([elements], ['elements'], [list])
+        utils.validate_dtypes(
+            inputs=[elements], 
+            input_names=['elements'], 
+            required_dtypes=[list]
+            )
         for tag in elements:
-            utils.validate_dtypes([tag], ['tag'],[bs4.element.Tag])
+            utils.validate_dtypes(
+                inputs=[tag], 
+                input_names=['tag'],
+                required_dtypes=[bs4.element.Tag]
+                )
             text.append(tag.get_text(separator=self.separator, strip=self.strip))
         return self.join_symbol.join(text)

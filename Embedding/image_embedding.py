@@ -1,5 +1,6 @@
 
 from typing import List, Optional
+from typing_extensions import override
 from abc import ABC, abstractmethod
 
 from PIL import Image
@@ -36,6 +37,7 @@ class CLIPImageEmbedding(pydantic.BaseModel, ImageEmbeddingI):
         if self.preprocessor is None:
             self.preprocessor = CLIPProcessor.from_pretrained(self.model_name_or_path)
 
+    @override
     def encode(self, images: list[Image.Image]) -> np.ndarray:
         """Computes image embeddings.
 
@@ -48,8 +50,17 @@ class CLIPImageEmbedding(pydantic.BaseModel, ImageEmbeddingI):
         Returns:
             The image embeddings obtained by applying the projection layer to the pooled output of [CLIPVisionModel].
         """
-        utils.validate_dtypes([images], ['images'], [list])
-        for image in images: utils.validate_dtypes([image], ['image'], [Image.Image])
+        utils.validate_dtypes(
+            inputs=[images], 
+            input_names=['images'], 
+            required_dtypes=[list]
+            )
+        for image in images: 
+            utils.validate_dtypes(
+                inputs=[image], 
+                input_names=['image'], 
+                required_dtypes=[Image.Image]
+                )
         inputs = self.preprocessor(images=images, return_tensors="pt")
         embeddings = self.model.get_image_features(**inputs)
         return embeddings.detach().cpu().numpy().astype(np.float32)

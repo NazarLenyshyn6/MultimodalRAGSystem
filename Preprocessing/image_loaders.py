@@ -79,7 +79,11 @@ class RequestsImageLoader(pydantic.BaseModel, ImageLoaderI):
         Returns:
             LoadedImage or None: LoadedImage instance on success, None if failure and handle_exception is True.
         """
-        utils.validate_dtypes([url], ['url'], [str])
+        utils.validate_dtypes(
+            inputs=[url], 
+            input_names=['url'], 
+            required_dtypes=[str]
+            )
         if not url.startswith('http'):
             if handle_exception:
                 return None

@@ -1,5 +1,8 @@
 
+
+from typing_extensions import override
 from abc import ABC, abstractmethod
+
 
 import numpy as np
 from sklearn import random_projection
@@ -14,7 +17,9 @@ class VectorProjectionI:
 
 class GaussianRandomVectorProjection(VectorProjectionI):
     """Reduce dimensionality through Gaussian random projection."""
+
     @staticmethod
+    @override
     def project(vector: np.ndarray, target_dim: np.ndarray):
         """Project input vector to taget dimention.
 

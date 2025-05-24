@@ -32,16 +32,13 @@ class ParserConfig(pydantic.BaseModel):
     def validate_parsed_tags_tags(cls, values):
         parsed_tags = values.parsed_tags
         tags = values.tags
-
         if len(parsed_tags) == 0 or len(tags) == 0:
             raise ValueError('Neither parsed_tags nor tags can be empty.')
         if len(parsed_tags) != len(tags):
             raise ValueError('parsed_tags and tags must have the same length.')
-        
         tag_type = type(tags[0])
         if not all(isinstance(tag, tag_type) for tag in tags):
             raise ValueError('All objects in tags list must be of the same type.')
-
         return values
 
     def __repr__(self) -> str:
@@ -64,7 +61,10 @@ class ParsedData:
         with the tag name, holding the corresponding parsed data.
 
     """
-    def __init__(self, url: str, parsed_data: Dict[str, list]) -> None:
+    def __init__(self, 
+                 url: str, 
+                 parsed_data: Dict[str, list]
+                 ) -> None:
         self.url = url 
         self.parsed_tags = parsed_data.keys()
         for parsed_tag, data in parsed_data.items():

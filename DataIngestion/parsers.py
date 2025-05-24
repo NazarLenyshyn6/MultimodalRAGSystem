@@ -68,7 +68,7 @@ class BS4Parser(pydantic.BaseModel,ParserI):
                 fetching_result.FetchResultI, 
                 parsing_configs.ParserConfig
                 ]
-                        )
+                )
         if website_response.success == False:
             raise RuntimeError("Cannot parse HTML: website_response.success is False.")
         if not all(isinstance(tag, parsing_tags.BS4Tag) for tag in parser_config.tags):

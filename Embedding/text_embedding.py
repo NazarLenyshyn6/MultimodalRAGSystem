@@ -47,6 +47,15 @@ class SentenceTransformerTextEmbedding(pydantic.BaseModel, TextEmbeddingI):
 
         """
         
-        validate_dtypes([sentences], ['sentences'], [list])
-        for sentence in sentences: validate_dtypes([sentence], ['sentences_element'], [str])
+        validate_dtypes(
+            inputs=[sentences], 
+            input_names=['sentences'], 
+            required_dtypes=[list]
+            )
+        for sentence in sentences: 
+            validate_dtypes(
+                inputs=[sentence], 
+                input_names=['sentences_element'], 
+                required_dtypes=[str]
+                )
         return np.asarray(self.model.encode(sentences), dtype=np.float32)

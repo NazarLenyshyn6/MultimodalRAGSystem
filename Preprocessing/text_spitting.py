@@ -6,14 +6,14 @@ from abc import ABC, abstractmethod
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import pydantic
 
-from schema import TextDocument
-from Internals.utils  import compute_hash_from_text
+import schema
+from Internals.utils import generate_unique_doc_id
 from Internals.utils import validate_dtypes
 
 
 class TextSplitterI(ABC):
     @abstractmethod
-    def split(self, text: str, source_url: str) -> List[TextDocument]:
+    def split(self, text: str, source_url: str) -> List[schema.TextDocument]:
         ...
 
 class RecursiveTextSplitter(pydantic.BaseModel, TextSplitterI):
@@ -21,10 +21,10 @@ class RecursiveTextSplitter(pydantic.BaseModel, TextSplitterI):
         that splits input text into chunks and returns a list of TextDocument instances.
 
     Attributes:
-        chunk_size: . 
-        chunk_overlap: . 
-        separators: . 
-        splitter: . 
+        chunk_size: The maximum number of characters per chunk. 
+        chunk_overlap: Number of characters from the end of one chunk that should be repeated at the start of the next.
+        separators: Ordered list of string delimiters to try when breaking the text. 
+        splitter: Instance of RecursiveCharacterTextSplitter class. 
 
     Raises:
         ValidationError: If attributes does not match excpected data types.
@@ -44,7 +44,7 @@ class RecursiveTextSplitter(pydantic.BaseModel, TextSplitterI):
                                                            )
         
     @override
-    def split(self, text: str, source_url: str) -> List[TextDocument]:
+    def split(self, text: str, source_url: str) -> List[schema.TextDocument]:
         """
         Split the input text into chunks and wrap each chunk in a TextDocument.
 
@@ -74,9 +74,9 @@ class RecursiveTextSplitter(pydantic.BaseModel, TextSplitterI):
                 )
         split_text = self.splitter.split_text(text)
         return [
-            TextDocument(
-                id=compute_hash_from_text(text),
-                text=text,
+            schema.TextDocument(
+                id=generate_unique_doc_id(content=text, metadata={'source_url': source_url}),
+                content=text,
                 source_url=source_url
                 ) 
                 for text in split_text
