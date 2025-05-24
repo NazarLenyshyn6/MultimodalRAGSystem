@@ -11,6 +11,7 @@ import torch
 from Preprocessing import image_loaders
 from schema import ImageDocument
 from Internals import utils
+from CustomExceptions import preprocessing_exceptions
 
 
 class ImageDescriberI(ABC):
@@ -30,6 +31,7 @@ class BLIPImageDescriber(pydantic.BaseModel, ImageDescriberI):
 
     Raises:
         ValidationError: If attribute does not match exptected data type.
+        ImageDescriptionError: .
     """
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
     pretrained_model_name_or_path: str = pydantic.Field(default="Salesforce/blip-image-captioning-base")
@@ -61,12 +63,15 @@ class BLIPImageDescriber(pydantic.BaseModel, ImageDescriberI):
             input_names=['image'], 
             required_dtypes=[image_loaders.LoadedImage]
             )
-        inputs = self.processor(images=image.image, return_tensors='pt')
-        with torch.no_grad():
-            output = self.model.generate(**inputs)
-        description = self.processor.decode(output[0], skip_special_tokens=True)
-        return ImageDocument(id=utils.generate_unique_doc_id(content=description, metadata={}),
-                             content=description,
-                             image=image.image,
-                             source_url=image.url,
-                             image_url=image.url)
+        try:
+            inputs = self.processor(images=image.image, return_tensors='pt')
+            with torch.no_grad():
+                output = self.model.generate(**inputs)
+            description = self.processor.decode(output[0], skip_special_tokens=True)
+            return ImageDocument(id=utils.generate_unique_doc_id(content=description, metadata={}),
+                                content=description,
+                                image=image.image,
+                                source_url=image.url,
+                                image_url=image.url)
+        except Exception as e:
+            raise preprocessing_exceptions.ImageDescriptionError(message=f'BlipImageDescriber failed image description: {e}')

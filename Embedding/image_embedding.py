@@ -10,6 +10,7 @@ import pydantic
 from transformers import CLIPProcessor, CLIPModel
 
 from Internals import  utils
+from CustomExceptions import embedding_exceptions
 
 class ImageEmbeddingI(ABC):
     """Interface class for image embedding."""
@@ -46,6 +47,7 @@ class CLIPImageEmbedding(pydantic.BaseModel, ImageEmbeddingI):
 
         Raises:
             TypeError: If images is not a list or contains not Image.Image objects.
+            ImageEmbeddingError: .
 
         Returns:
             The image embeddings obtained by applying the projection layer to the pooled output of [CLIPVisionModel].
@@ -61,6 +63,9 @@ class CLIPImageEmbedding(pydantic.BaseModel, ImageEmbeddingI):
                 input_names=['image'], 
                 required_dtypes=[Image.Image]
                 )
-        inputs = self.preprocessor(images=images, return_tensors="pt")
-        embeddings = self.model.get_image_features(**inputs)
-        return embeddings.detach().cpu().numpy().astype(np.float32)
+        try:
+            inputs = self.preprocessor(images=images, return_tensors="pt")
+            embeddings = self.model.get_image_features(**inputs)
+            return embeddings.detach().cpu().numpy().astype(np.float32)
+        except Exception as e:
+            raise embedding_exceptions.ImageEmbeddingError(message=f'CLIPImageEmbedding failed image embedding: {e}')

@@ -14,10 +14,11 @@ import schema
 from VectorStore import base_vector_store
 from Internals import adapters
 from Internals import utils
+from CustomExceptions import vectore_store_exceptions
 
 ToBaseDocument =  Callable[[Document], schema.BaseDocument]
 
-class ChoromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
+class ChromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
     """Vector Store implementation using Chroma, supporting multiple document types with embeddings.
 
     Attributes:
@@ -75,6 +76,7 @@ class ChoromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
 
         Raises:
             TypeError: If `document` or `to_base_document` is not of the expected type.
+            DocumentAdditionError: .
         """
         utils.validate_dtypes(
             inputs=[
@@ -89,13 +91,23 @@ class ChoromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
                     schema.BaseDocument, 
                     ToBaseDocument]
                     )
-        cls._supported_documents.add(document)
-        cls._to_base_document[document.type] = to_base_document
+        try:
+            cls._supported_documents.add(document)
+            cls._to_base_document[document.type] = to_base_document
+        except Exception as e:
+            raise vectore_store_exceptions.DocumentAdditionError(f"ChoromaVectorStore failed to add new supported document type: {e}")
 
     @override
     def clean(self) -> None:
-        """Clears the vector store, removing all stored documents and embeddings."""
-        self.vectorstore._collection.delete()
+        """Clears the vector store, removing all stored documents and embeddings.
+
+        Raises:
+            VectoreStoreCleaningError: .
+        """
+        try:
+            self.vectorstore._collection.delete()
+        except Exception as e:
+            raise vectore_store_exceptions.VectoreStoreCleaningError(message=f"Failed to clear ChormaVectoreStore: {e}")
 
     @override
     def add_documents(self, 
@@ -110,6 +122,7 @@ class ChoromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
 
         Raises:
             TypeError: If embeddings are not a numpy ndarray, or if a document type is not supported.
+            DocumentAdditionError: .
         """
         utils.validate_dtypes(
             inputs=[embeddings], 
@@ -120,12 +133,15 @@ class ChoromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
             if not type(document) in self._supported_documents:
                 raise  TypeError(f'Only {self._supported_documents} are currently supported  with  ChoromaVectorStore. Got instead: {type(document)}')
         
-        self.vectorstore._collection.add(
-                ids=[document.id  for document  in documents],
-                embeddings=embeddings,
-                documents=[f'{document.content}' for document in documents],
-                metadatas=[document.metadata for document in documents]
-            )
+        try:
+            self.vectorstore._collection.add(
+                    ids=[document.id  for document  in documents],
+                    embeddings=embeddings,
+                    documents=[f'{document.content}' for document in documents],
+                    metadatas=[document.metadata for document in documents]
+                )
+        except Exception as e:
+            raise vectore_store_exceptions.DocumentAdditionError(message=f"ChoromaVectorStore failed document addition: {e}")
     
     @override
     def similarity_search(self,
@@ -140,6 +156,7 @@ class ChoromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
 
         Raises:
             TypeError: If `query` is not a string or `k` is not an integer.
+            FailedSimilaritySearch: .
 
         Returns:
             List[schema.BaseDocument]: List of top-K similar documents, converted into supported BaseDocument types.
@@ -150,7 +167,10 @@ class ChoromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
             input_names=['query', 'k'], 
             required_dtypes=[str, int]
             )
-        self.retriver.search_kwargs['k'] = k
-        docs = self.retriver.invoke(query)
-        return [self._to_base_document[doc.metadata['type']](doc) for doc in docs]
+        try:
+            self.retriver.search_kwargs['k'] = k
+            docs = self.retriver.invoke(query)
+            return [self._to_base_document[doc.metadata['type']](doc) for doc in docs]
+        except Exception as e:
+            raise vectore_store_exceptions.FailedSimilaritySerachError(message=f"ChoromaVectorStore failed similarity search: {e}")
     

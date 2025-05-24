@@ -10,6 +10,8 @@ import schema
 from Internals.utils import generate_unique_doc_id
 from Internals.utils import validate_dtypes
 
+from CustomExceptions import preprocessing_exceptions
+
 
 class TextSplitterI(ABC):
     @abstractmethod
@@ -72,12 +74,15 @@ class RecursiveTextSplitter(pydantic.BaseModel, TextSplitterI):
                 (str, type(None))
                 ]
                 )
-        split_text = self.splitter.split_text(text)
-        return [
-            schema.TextDocument(
-                id=generate_unique_doc_id(content=text, metadata={'source_url': source_url}),
-                content=text,
-                source_url=source_url
-                ) 
-                for text in split_text
-                ]
+        try:
+            split_text = self.splitter.split_text(text)
+            return [
+                schema.TextDocument(
+                    id=generate_unique_doc_id(content=text, metadata={'source_url': source_url}),
+                    content=text,
+                    source_url=source_url
+                    ) 
+                    for text in split_text
+                    ]
+        except Exception as e:
+            raise preprocessing_exceptions.TextSplittingError(message=f"RecursiveTextSplitter failed text splitting: {e}")

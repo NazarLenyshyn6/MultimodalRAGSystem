@@ -9,6 +9,8 @@ import pydantic
 from DataIngestion import fetch
 from Internals import utils
 
+from CustomExceptions import fetch_exceptions
+from CustomExceptions import preprocessing_exceptions
 
 class LoadedImage:
     """ Wrapper for a loaded image along with its source URL.
@@ -74,7 +76,8 @@ class RequestsImageLoader(pydantic.BaseModel, ImageLoaderI):
 
         Raises:
             ValueError: If URL does not start with http/https and handle_exception is False.
-            RuntimeError: If fetching fails and handle_exception is False.
+            FailedFatchingError: If fetching fails and handle_exception is False.
+            ImageLoadingError: . 
 
         Returns:
             LoadedImage or None: LoadedImage instance on success, None if failure and handle_exception is True.
@@ -97,10 +100,10 @@ class RequestsImageLoader(pydantic.BaseModel, ImageLoaderI):
         if image_responce.success is False:
             if handle_exception:
                 return None
-            raise RuntimeError("Cannot fetch image: website_response.success is False.")
+            raise fetch_exceptions.FailedFatchingError(message="Cannot fetch image: website_response.success is False.")
         try:
             return LoadedImage(url=url, image=Image.open(BytesIO(image_responce.response.content)))
         except Exception as e:
             if handle_exception:
                 return None
-            raise e
+            raise preprocessing_exceptions.ImageLoadingError(message=f"RequestsImageLoader failed image loading: {e}")

@@ -8,6 +8,7 @@ import pydantic
 from sentence_transformers import SentenceTransformer
 
 from Internals.utils import validate_dtypes
+from CustomExceptions import embedding_exceptions
 
 
 class TextEmbeddingI(ABC):
@@ -41,6 +42,7 @@ class SentenceTransformerTextEmbedding(pydantic.BaseModel, TextEmbeddingI):
 
         Raises:
             TypeError: If sentences is not a list or not all elements in sentences is a string.
+            TextEmbeddingError: .
 
         Returns: 2d numpy array with shape [num_inputs, output_dimension] is returned. 
                  If only one string input is provided, then the output is a 1d array with shape [output_dimension].
@@ -58,4 +60,8 @@ class SentenceTransformerTextEmbedding(pydantic.BaseModel, TextEmbeddingI):
                 input_names=['sentences_element'], 
                 required_dtypes=[str]
                 )
-        return np.asarray(self.model.encode(sentences), dtype=np.float32)
+        try:
+            return np.asarray(self.model.encode(sentences), dtype=np.float32)
+        except Exception as e:
+            raise embedding_exceptions.TextEmbeddingError(message=f"SentenceTransformerTextEmbedding failed text embedding: {e}")
+        

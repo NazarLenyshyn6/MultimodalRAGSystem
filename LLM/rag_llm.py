@@ -135,9 +135,10 @@ class OllamaRAGLLM(pydantic.BaseModel):
         relevant_docs = self.get_relevant_docs(user_query=user_query, 
                                                k=k)
         context = self._get_context(relevant_docs=relevant_docs)
-        prompt = self.prompt_template.invoke({'context': context, 
-                                              'user_query': user_query})
+        prompt = self.prompt_template.invoke({'context': context, 'user_query': user_query})
         llm_response = self.model.invoke(prompt)
-        return RAGLLMResponse(user_query=user_query, 
-                              llm_resopnse=llm_response, 
-                              relevant_docs=relevant_docs)
+        return RAGLLMResponse(
+            user_query=user_query, 
+            llm_resopnse=llm_response, 
+            relevant_docs=relevant_docs
+            )
