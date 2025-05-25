@@ -1,4 +1,4 @@
 from CustomExceptions.base_exceptions import BaseException
 
-class FatchingError(BaseException):
+class RAGLLMInitializationError(BaseException):
     ...

@@ -11,6 +11,7 @@ import torch
 from Preprocessing import image_loaders
 from schema import ImageDocument
 from Internals import utils
+from Internals.logger import logger
 from CustomExceptions import preprocessing_exceptions
 
 
@@ -31,7 +32,7 @@ class BLIPImageDescriber(pydantic.BaseModel, ImageDescriberI):
 
     Raises:
         ValidationError: If attribute does not match exptected data type.
-        ImageDescriptionError: .
+        ImageDescriptionError: If image description fails.
     """
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
     pretrained_model_name_or_path: str = pydantic.Field(default="Salesforce/blip-image-captioning-base")
@@ -40,9 +41,19 @@ class BLIPImageDescriber(pydantic.BaseModel, ImageDescriberI):
 
     def model_post_init(self, context):
         if self.processor is None:
-            self.processor =  BlipProcessor.from_pretrained(self.pretrained_model_name_or_path)
-        if self.model is None:
-            self.model = BlipForConditionalGeneration.from_pretrained(self.pretrained_model_name_or_path)
+            try:
+                self.processor =  BlipProcessor.from_pretrained(self.pretrained_model_name_or_path)
+            except Exception as e:
+                msg = f"BLIPImageDescriber initialization failed due to error in BlipProcessor.from_pretrained with {self.pretrained_model_name_or_path} model_name_or_path"
+                logger.exception(msg)
+                raise preprocessing_exceptions.ImageDescriptionError(msg) from e
+            try:
+                if self.model is None:
+                    self.model = BlipForConditionalGeneration.from_pretrained(self.pretrained_model_name_or_path)
+            except Exception as e:
+                msg = f"BLIPImageDescriber initialization failed due to error in BlipForConditionalGeneration.from_pretrained with {self.pretrained_model_name_or_path} model_name_or_path."
+                logger.exception(msg)
+                raise preprocessing_exceptions.ImageDescriptionError(msg) from e
 
     @override
     def describe(self, image: image_loaders.LoadedImage) -> ImageDocument:
@@ -64,14 +75,21 @@ class BLIPImageDescriber(pydantic.BaseModel, ImageDescriberI):
             required_dtypes=[image_loaders.LoadedImage]
             )
         try:
+            logger.info(f"BLIPImageDescriber describing {image}")
             inputs = self.processor(images=image.image, return_tensors='pt')
             with torch.no_grad():
                 output = self.model.generate(**inputs)
             description = self.processor.decode(output[0], skip_special_tokens=True)
-            return ImageDocument(id=utils.generate_unique_doc_id(content=description, metadata={}),
-                                content=description,
-                                image=image.image,
-                                source_url=image.url,
-                                image_url=image.url)
+            image_document = ImageDocument(id=utils.generate_unique_doc_id(content=description),
+                                           content=description,
+                                           image=image.image,
+                                           source_url=image.url,
+                                           image_url=image.url
+                                           )
+            logger.info("BLIPImageDescriber seccessully described {image}")
+            return image_document
         except Exception as e:
-            raise preprocessing_exceptions.ImageDescriptionError(message=f'BlipImageDescriber failed image description: {e}')
+            msg = f"BlipImageDescriber failed image description for {repr(image)}"
+            logger.exception(msg)
+            raise preprocessing_exceptions.ImageDescriptionError(msg) from e
+        

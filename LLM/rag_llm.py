@@ -9,6 +9,8 @@ from langchain_core.prompts.prompt import PromptTemplate
 from VectorStore import base_vector_store
 from LLM.llm_response import RAGLLMResponse
 from schema import BaseDocument
+from Internals.logger import logger
+from CustomExceptions import llm_exceptions
 
 
 @runtime_checkable
@@ -53,6 +55,9 @@ class OllamaRAGLLM(pydantic.BaseModel):
         model: language model (default is 'llama3.2').
         prompt_template: Template with input variables ('context', 'user_query').
         vectorstore: Vectorstore that follows VectorStoreI inteface.
+
+    Raises:
+        RAGLLMInitalizationError: If OllamaRagLLM initialization fails.
     """
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
     model: Ollama = pydantic.Field(default=Ollama(model='llama3.2'))
@@ -66,9 +71,13 @@ class OllamaRAGLLM(pydantic.BaseModel):
         Raises:
             ValueError: If the prompt template's input variables are not {'context', 'user_query'}.
         """
+        logger.info("OllamaRAGLLM initialization")
         prompt_template = values.prompt_template
         if set(prompt_template.input_variables) != {'context', 'user_query'}:
-            raise ValueError(f'Prompt template input variables must be (context, user_qeury). Got instead: {prompt_template.input_variables}')
+            msg = 'Prompt template input variables must be (context, user_qeury). Got instead: {prompt_template.input_variables}'
+            logger.error(msg)
+            raise llm_exceptions.RAGLLMInitializationError(msg)
+        logger.info("OllamaRAGLLM initialization done successfully.")
         return values
 
     def _get_context(self, relevant_docs: List[BaseDocument]) -> str:
@@ -132,13 +141,15 @@ class OllamaRAGLLM(pydantic.BaseModel):
         Returns:
             RAGLLMResponse: Response object containing the user query, LLM output, and relevant documents.
         """
+        logger.info(f"OllamaRAGLLM processing user query: {user_query}")
         relevant_docs = self.get_relevant_docs(user_query=user_query, 
                                                k=k)
         context = self._get_context(relevant_docs=relevant_docs)
         prompt = self.prompt_template.invoke({'context': context, 'user_query': user_query})
         llm_response = self.model.invoke(prompt)
-        return RAGLLMResponse(
-            user_query=user_query, 
-            llm_resopnse=llm_response, 
-            relevant_docs=relevant_docs
-            )
+        model_response = RAGLLMResponse(user_query=user_query, 
+                                         llm_resopnse=llm_response, 
+                                         relevant_docs=relevant_docs
+                                         )
+        logger.info(f"OllamaRAGLLM successfully processed user query: {user_query}")
+        return model_response

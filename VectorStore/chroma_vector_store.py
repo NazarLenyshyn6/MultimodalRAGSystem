@@ -14,6 +14,7 @@ import schema
 from VectorStore import base_vector_store
 from Internals import adapters
 from Internals import utils
+from Internals.logger import logger
 from CustomExceptions import vectore_store_exceptions
 
 ToBaseDocument =  Callable[[Document], schema.BaseDocument]
@@ -31,6 +32,7 @@ class ChromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
 
     Raises:
         ValidationError: If attribute does not match expected data type.
+        VectoreStoreInitializationError: If vectorestore initialization fails.
     """
     _supported_documents: ClassVar = {schema.ImageDocument, schema.TextDocument}
     _to_base_document: ClassVar = {
@@ -57,9 +59,22 @@ class ChromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
     search_type: Literal['similarity', 'mmr'] = pydantic.Field(default='similarity')
 
     def model_post_init(self, context):
-        self.vectorstore = Chroma(embedding_function=self.embedding_function,
-                                  collection_name=self.collection_name)
-        self.retriver = self.vectorstore.as_retriever(search_type=self.search_type)
+        try:
+            self.vectorstore = Chroma(embedding_function=self.embedding_function,
+                                      collection_name=self.collection_name)
+        except Exception as e:
+            msg = (f"ChromaVectorStore initialization failed due to error in Chroma initialization."
+                   f"Embedding function: {self.embedding_function}"
+                   f"Collection naem: {self.collection_name}"
+                   )
+            logger.exception(msg)
+            raise vectore_store_exceptions.VectoreStoreInitializationError(msg) from e
+        try:
+            self.retriver = self.vectorstore.as_retriever(search_type=self.search_type)
+        except Exception as e:
+            msg = f"ChromaVectoreStore initialization failed due to error in Chroma.as_retriver with {self.search_type} search type."
+            logger.exception(msg)
+            raise vectore_store_exceptions.VectoreStoreInitializationError(msg) from e
     
     @classmethod
     def add_supported_document(
@@ -92,22 +107,33 @@ class ChromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
                     ToBaseDocument]
                     )
         try:
+            logger.info(f"Adding new supported document type {document} to ChrommaVectoreStore")
             cls._supported_documents.add(document)
             cls._to_base_document[document.type] = to_base_document
+            logger.info(f"{document} successfully added to ChoromaVectoreStore.")
         except Exception as e:
-            raise vectore_store_exceptions.DocumentAdditionError(f"ChoromaVectorStore failed to add new supported document type: {e}")
+            msg = (f"CHomaVectoreStore failed to add new supported document type"
+                   f"Document: {document}"
+                   f"Convertion function: {to_base_document}"
+                   )
+            logger.exception(msg)
+            raise vectore_store_exceptions.DocumentAdditionError(msg) from e
 
     @override
     def clean(self) -> None:
         """Clears the vector store, removing all stored documents and embeddings.
 
         Raises:
-            VectoreStoreCleaningError: .
+            VectoreStoreCleaningError: If vectorestore cleaning fails.
         """
         try:
+            logger.info("ChromaVectoreStore cleaning.")
             self.vectorstore._collection.delete()
+            logger.info("ChromaVectoreStore successfully clean.")
         except Exception as e:
-            raise vectore_store_exceptions.VectoreStoreCleaningError(message=f"Failed to clear ChormaVectoreStore: {e}")
+            msg = f"ChoraVectoreStore cleaning failed."
+            logger.exception(msg)
+            raise vectore_store_exceptions.VectoreStoreCleaningError(msg) from e
 
     @override
     def add_documents(self, 
@@ -129,19 +155,25 @@ class ChromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
             input_names=['embeddings'], 
             required_dtypes=[np.ndarray]
             )
-        for document  in  documents:
+        for document in documents:
             if not type(document) in self._supported_documents:
-                raise  TypeError(f'Only {self._supported_documents} are currently supported  with  ChoromaVectorStore. Got instead: {type(document)}')
+                raise TypeError(
+                    f'Only {self._supported_documents} are currently supported  with  ChoromaVectorStore. Got instead: {type(document)}'
+                    )
         
         try:
+            logger.info("Adding new (documents, embeddings) to ChromaVectoreStore.")
             self.vectorstore._collection.add(
                     ids=[document.id  for document  in documents],
                     embeddings=embeddings,
                     documents=[f'{document.content}' for document in documents],
                     metadatas=[document.metadata for document in documents]
                 )
+            logger.info("New (documents, embeddings) successfully added to ChromaVectoreStore.")
         except Exception as e:
-            raise vectore_store_exceptions.DocumentAdditionError(message=f"ChoromaVectorStore failed document addition: {e}")
+            msg = "ChromaVectoreStore failed document addition."
+            logger.exception(msg)
+            raise vectore_store_exceptions.DocumentAdditionError(msg) from e
     
     @override
     def similarity_search(self,
@@ -168,9 +200,13 @@ class ChromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
             required_dtypes=[str, int]
             )
         try:
+            logger.info(f"Searching {k} similar documents for query: {query} in ChromaVectoreStore")
             self.retriver.search_kwargs['k'] = k
             docs = self.retriver.invoke(query)
-            return [self._to_base_document[doc.metadata['type']](doc) for doc in docs]
+            retrieved_docs = [self._to_base_document[doc.metadata['type']](doc) for doc in docs]
+            logger.info(f"{k} similar documents for query: {query} successfully retieved from ChromaVectoreStore")
+            return retrieved_docs
         except Exception as e:
-            raise vectore_store_exceptions.FailedSimilaritySerachError(message=f"ChoromaVectorStore failed similarity search: {e}")
-    
+            msg = f"ChoromaVectorStore failed similarity search for query: {query}"
+            logger.exception(msg)
+            raise vectore_store_exceptions.SimilaritySerachError(msg) from e

@@ -8,6 +8,7 @@ import numpy as np
 from sklearn import random_projection
 
 from Internals import utils
+from Internals.logger import logger
 from CustomExceptions import embedding_exceptions
 
 class VectorProjectionI:
@@ -30,7 +31,7 @@ class GaussianRandomVectorProjection(VectorProjectionI):
 
         Raises:
             TypeError: If argument type does not match exptected data type.
-            VectorProjectionError: .
+            VectorProjectionError: If vector projection fails.
 
         Returns:
             np.ndarray: Vector with target dimentionality.
@@ -50,7 +51,12 @@ class GaussianRandomVectorProjection(VectorProjectionI):
                 ]
             )
         try:
-            return random_projection.GaussianRandomProjection(n_components=target_dim).fit_transform(vector)
+            logger.info("GaussianRandomVectorProjection projecting vector.")
+            projection = random_projection.GaussianRandomProjection(n_components=target_dim).fit_transform(vector)
+            logger.info('GaussianRandomVectorProjection successfully projected vector.')
+            return projection
         except Exception as e:
-            raise embedding_exceptions.VectorProjectionError(message=f"GaussianrandomVectorProjection failed vector projection: {e}")
+            msg = "GaussianrandomVectorProjection failed vector projection."
+            logger.exception(msg)
+            raise embedding_exceptions.VectorProjectionError(msg) from e
         

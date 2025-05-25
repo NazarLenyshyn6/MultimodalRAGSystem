@@ -2,6 +2,8 @@
 
 import hashlib
 import uuid
+import logging
+import traceback
 
 def validate_dtypes(inputs, input_names, required_dtypes):
     """Validate if inputs corresponds to required data types.
@@ -33,4 +35,3 @@ def generate_unique_doc_id(content: str, metadata: dict = None) -> str:
     base_hash = hashlib.sha256(combined.encode('utf-8')).hexdigest()
     salt = str(uuid.uuid4())
     return f"{base_hash}-{salt}"
-      

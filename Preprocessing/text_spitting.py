@@ -9,6 +9,7 @@ import pydantic
 import schema
 from Internals.utils import generate_unique_doc_id
 from Internals.utils import validate_dtypes
+from Internals.logger import logger
 
 from CustomExceptions import preprocessing_exceptions
 
@@ -30,6 +31,7 @@ class RecursiveTextSplitter(pydantic.BaseModel, TextSplitterI):
 
     Raises:
         ValidationError: If attributes does not match excpected data types.
+        TextSplitterInitializationError: If RecursiveTextSplitter initialization fails.
     """
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
     chunk_size: int = pydantic.Field(default=1500)
@@ -40,10 +42,18 @@ class RecursiveTextSplitter(pydantic.BaseModel, TextSplitterI):
     def model_post_init(self, context):
         if self.separators  is None:
             self.separators = ["\n\n", "\n", " ", ""]
-        if self.splitter is None:
-            self.splitter = RecursiveCharacterTextSplitter(chunk_size=self.chunk_size,
-                                                           chunk_overlap=self.chunk_overlap,
-                                                           )
+        try:
+            if self.splitter is None:
+                self.splitter = RecursiveCharacterTextSplitter(chunk_size=self.chunk_size,
+                                                            chunk_overlap=self.chunk_overlap,
+                                                            )
+        except Exception as e:
+            msg = (f"RecursiveTextSplitter initialization failed due to error in RecursiveCharacterTextSplitter initialization"
+                   f"Chunk size: {self.chunk_size}"
+                   f"Chunk overlap: {self.chunk_overlap}"
+                   )
+            logger.exception(msg)
+            raise preprocessing_exceptions.TextSplitterInitializationError(msg) from e
         
     @override
     def split(self, text: str, source_url: str) -> List[schema.TextDocument]:
@@ -56,6 +66,7 @@ class RecursiveTextSplitter(pydantic.BaseModel, TextSplitterI):
 
         Raises:
             TypeError: If text or source_url (if not None) is not a string.
+            TextSplittingError: If text splitting fails.
 
         Returns:
             List: List of text chunks wrapped as TextDocument.
@@ -75,14 +86,18 @@ class RecursiveTextSplitter(pydantic.BaseModel, TextSplitterI):
                 ]
                 )
         try:
+            logger.info(f"RecursiveTextSplitter splitting text from {source_url}")
             split_text = self.splitter.split_text(text)
-            return [
-                schema.TextDocument(
-                    id=generate_unique_doc_id(content=text, metadata={'source_url': source_url}),
-                    content=text,
-                    source_url=source_url
-                    ) 
-                    for text in split_text
-                    ]
+            splitted_text = [
+                schema.TextDocument(id=generate_unique_doc_id(content=text, metadata={'source_url': source_url}),
+                                    content=text,
+                                    source_url=source_url
+                                    ) 
+                                    for text in split_text
+                                    ]
+            logger.info(f"RecursiveTextSplitter successfully splitted text from {source_url}")
+            return splitted_text
         except Exception as e:
-            raise preprocessing_exceptions.TextSplittingError(message=f"RecursiveTextSplitter failed text splitting: {e}")
+            msg = f"RecursiveTextSplitter failed splitting text from {source_url}"
+            logger.exception(msg)
+            raise preprocessing_exceptions.TextSplittingError(msg) from e

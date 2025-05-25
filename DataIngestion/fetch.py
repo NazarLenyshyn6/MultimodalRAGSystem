@@ -43,8 +43,11 @@ class RequestsFetcher(FetcherI):
     def _validate_timeout(timeout: Any) -> None:
         if isinstance(timeout, (int, float)):
             return
-        if isinstance(timeout, tuple) and len(timeout) == 2 and all(isinstance(t, (int, float)) for  t  in timeout):
-                return
+        if (isinstance(timeout, tuple) and 
+            len(timeout) == 2 and 
+            all(isinstance(t, (int, float)) for  t  in timeout)
+            ):
+            return
         raise TypeError("Timeout must be a single int/float or a tuple of two int/float values.")
     
     @override
@@ -94,20 +97,32 @@ class RequestsFetcher(FetcherI):
                 (dict, type(None))]
                 )
         try:
+            logger.info('RequestsFetcher fetching url %s', url)
             response = requests.get(url, params=params, headers=headers, cookies=cookies, timeout=self.timeout)
             response.raise_for_status()
-            return fetching_result.FetchResult(
-                success=True,
-                url=url,
-                response=response,
-                data=response.text,
-                status_code=response.status_code,
-                headers=response.headers,
-                meta=meta_data
-            )
-        except requests.exceptions.Timeout:
-            return fetching_result.FetchResult(success=False, url=url, error_message="Timeout occured.", meta=meta_data)
+            fetch_result = fetching_result.FetchResult(success=True,
+                                                       url=url,
+                                                       response=response,
+                                                       data=response.text,
+                                                       status_code=response.status_code,
+                                                       headers=response.headers,
+                                                       meta=meta_data
+                                                       )
+            logger.info('RequestsFetcher successfully fetched data from %s', url)
+            return fetch_result
+        except requests.exceptions.Timeout as e:
+            logger.exception(
+                "RequestsFetcher failed fetching data from %s", url
+                )
+            return fetching_result.FetchResult(success=False, 
+                                               url=url, 
+                                               error_message="Timeout occured.", 
+                                               meta=meta_data
+                                               )
         except requests.exceptions.HTTPError as e:
+            logger.exception(
+                "RequestsFetcher failed fetching data from %s due to HTTP error.", url
+                )
             return fetching_result.FetchResult(
                 success=False,
                 url=url,
@@ -116,11 +131,37 @@ class RequestsFetcher(FetcherI):
                 headers=(e.response.headers) if e.response else None,
                 meta=meta_data
             )
-        except requests.exceptions.ConnectionError:
-            return fetching_result.FetchResult(success=False, url=url, error_message="Connection error", meta=meta_data)
-        except requests.exceptions.SSLError:
-            return fetching_result.FetchResult(success=False, url=url, error_message="SSL error", meta=meta_data)
+        except requests.exceptions.ConnectionError as e:
+            logger.exception(
+                "RequestsFetcher failed fetching data from %s due to Connection error.", url 
+                )
+            return fetching_result.FetchResult(success=False, 
+                                               url=url, 
+                                               error_message="Connection error: {e}", 
+                                               meta=meta_data
+                                               )
+        except requests.exceptions.SSLError as e:
+            logger.exception(
+                "RequestsFetcher failed fetching data from %s due to SSL error.", url
+                )
+            return fetching_result.FetchResult(success=False, 
+                                               url=url, 
+                                               error_message="SSL error: {e}", 
+                                               meta=meta_data
+                                               )
         except requests.exceptions.RequestException as e:
-            return fetching_result.FetchResult(success=False, url=url, error_message=str(e), meta=meta_data)
+            logger.exception("RequestsFethcher failed fethcing data from %s.", url)
+            return fetching_result.FetchResult(success=False, 
+                                               url=url, 
+                                               error_message=str(e), 
+                                               meta=meta_data
+                                               )
         except Exception as e:
-            return fetching_result.FetchResult(success=False, url=url, error_message=str(e), meta=meta_data)
+            logger.exception(
+                "RequestsFetcher failed fetching data from %s", url, 
+                )
+            return fetching_result.FetchResult(success=False, 
+                                               url=url, 
+                                               error_message=str(e), 
+                                               meta=meta_data
+                                               )

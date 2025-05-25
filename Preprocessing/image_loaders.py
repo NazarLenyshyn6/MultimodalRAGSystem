@@ -8,6 +8,7 @@ import pydantic
 
 from DataIngestion import fetch
 from Internals import utils
+from Internals.logger import logger
 
 from CustomExceptions import fetch_exceptions
 from CustomExceptions import preprocessing_exceptions
@@ -77,11 +78,12 @@ class RequestsImageLoader(pydantic.BaseModel, ImageLoaderI):
         Raises:
             ValueError: If URL does not start with http/https and handle_exception is False.
             FailedFatchingError: If fetching fails and handle_exception is False.
-            ImageLoadingError: . 
+            ImageLoadingError: If image loading fails. 
 
         Returns:
             LoadedImage or None: LoadedImage instance on success, None if failure and handle_exception is True.
         """
+        logger.info(f"RequestsImageLoader loading image from {url}")
         utils.validate_dtypes(
             inputs=[url], 
             input_names=['url'], 
@@ -98,12 +100,20 @@ class RequestsImageLoader(pydantic.BaseModel, ImageLoaderI):
                                             meta_data=meta_data
                                             )
         if image_responce.success is False:
+            msg = "RequestsImageLoader cannot load image from {url}: website_response.success is False."
+            logger.error(msg)
             if handle_exception:
                 return None
-            raise fetch_exceptions.FailedFatchingError(message="Cannot fetch image: website_response.success is False.")
+            raise fetch_exceptions.FatchingError(msg) from e
         try:
-            return LoadedImage(url=url, image=Image.open(BytesIO(image_responce.response.content)))
+            loaded_image = LoadedImage(url=url, 
+                                       image=Image.open(BytesIO(image_responce.response.content))
+                                       )
+            logger.info(f"RequestsImageLoader successfully loaded image from {url}")
+            return loaded_image
         except Exception as e:
+            msg = f"RequestsImageLoader failed to load image from {url}"
+            logger.exception(msg)
             if handle_exception:
                 return None
-            raise preprocessing_exceptions.ImageLoadingError(message=f"RequestsImageLoader failed image loading: {e}")
+            raise preprocessing_exceptions.ImageLoadingError(msg) from e

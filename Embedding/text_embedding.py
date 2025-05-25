@@ -8,6 +8,7 @@ import pydantic
 from sentence_transformers import SentenceTransformer
 
 from Internals.utils import validate_dtypes
+from Internals.logger import logger
 from CustomExceptions import embedding_exceptions
 
 
@@ -31,8 +32,15 @@ class SentenceTransformerTextEmbedding(pydantic.BaseModel, TextEmbeddingI):
     model: SentenceTransformer =  pydantic.Field(default=None)
 
     def model_post_init(self, context):
+        logger.info("SentenceTransformerTextEmbedding initialization.")
         if self.model is None:
-            self.model = SentenceTransformer(self.model_name_or_path)
+            try:
+                self.model = SentenceTransformer(self.model_name_or_path)
+            except Exception as e:
+                msg = f"SentenceTransformerTextEmbedding initialization failed due to error in SentenceTransformer initialization with {self.model_name_or_path} model_name_or_path."
+                logger.exception(msg)
+                raise embedding_exceptions.TextEmbeddingError(msg) from e
+        logger.info("SentenceTransformerTextEmbedding done successfully.")
 
     @override
     def encode(self, sentences: List[str])  ->  np.ndarray:
@@ -42,7 +50,7 @@ class SentenceTransformerTextEmbedding(pydantic.BaseModel, TextEmbeddingI):
 
         Raises:
             TypeError: If sentences is not a list or not all elements in sentences is a string.
-            TextEmbeddingError: .
+            TextEmbeddingError: If sentences embedding fails.
 
         Returns: 2d numpy array with shape [num_inputs, output_dimension] is returned. 
                  If only one string input is provided, then the output is a 1d array with shape [output_dimension].
@@ -61,7 +69,12 @@ class SentenceTransformerTextEmbedding(pydantic.BaseModel, TextEmbeddingI):
                 required_dtypes=[str]
                 )
         try:
-            return np.asarray(self.model.encode(sentences), dtype=np.float32)
+            logger.info("SentenceTransformerTextEmbedding encoding sentences.")
+            embeddings = np.asarray(self.model.encode(sentences), dtype=np.float32)
+            logger.info("SentenceTransformerTextEmbedding successfuly encoded sentences.")
+            return embeddings
         except Exception as e:
-            raise embedding_exceptions.TextEmbeddingError(message=f"SentenceTransformerTextEmbedding failed text embedding: {e}")
+            msg = "SentenceTransformerTextEmbedding failed sentences embedding."
+            logger.exception(msg)
+            raise embedding_exceptions.TextEmbeddingError(msg) from e
         

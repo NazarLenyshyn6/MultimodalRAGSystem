@@ -1,4 +1,3 @@
-
 from CustomExceptions.base_exceptions import BaseException
 
 
@@ -12,4 +11,7 @@ class TextExtractionError(BaseException):
     ...
 
 class TextSplittingError(BaseException):
+    ...
+
+class TextSplitterInitializationError(BaseException):
     ...

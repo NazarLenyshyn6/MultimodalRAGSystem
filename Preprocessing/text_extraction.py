@@ -8,6 +8,7 @@ import bs4
 import pydantic
 
 from Internals import utils
+from Internals.logger import logger
 from CustomExceptions import preprocessing_exceptions
 
 
@@ -40,7 +41,7 @@ class SimpleBS4TextExtractor(pydantic.BaseModel, TextExtractorI):
 
         Raises: 
             TypeError: If elements is not a list or contains non-tag objects.
-            TextExtractionError: .
+            TextExtractionError: If text extraction fails.
 
         Returns:
             str: Extracted and concatenated text.
@@ -52,6 +53,7 @@ class SimpleBS4TextExtractor(pydantic.BaseModel, TextExtractorI):
             required_dtypes=[list]
             )
         try:
+            logger.info("SimpleBS4TextExtractor extracting text.")
             for tag in elements:
                 utils.validate_dtypes(
                     inputs=[tag], 
@@ -59,7 +61,11 @@ class SimpleBS4TextExtractor(pydantic.BaseModel, TextExtractorI):
                     required_dtypes=[bs4.element.Tag]
                     )
                 text.append(tag.get_text(separator=self.separator, strip=self.strip))
-            return self.join_symbol.join(text)
+            extracted_text = self.join_symbol.join(text)
+            logger.info("SimpleBS4TextExtractor successfully extracted text.")
+            return extracted_text
         except Exception as e:
-            raise preprocessing_exceptions.TextExtractionError(message=f"SimpleBS4TextExtractor failed text extraction: {e}")
+            msg = f"SimpleBS4TextExtractor failed text extraction."
+            logger.exception(msg)
+            raise preprocessing_exceptions.TextExtractionError(msg) from e
 

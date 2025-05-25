@@ -5,6 +5,7 @@ from typing import Optional, Literal, List, Dict
 import pydantic
 
 from DataIngestion import parsing_tags
+from Internals.logger import logger
 
 
 class ParserConfig(pydantic.BaseModel):
@@ -30,15 +31,32 @@ class ParserConfig(pydantic.BaseModel):
 
     @pydantic.model_validator(mode='after')
     def validate_parsed_tags_tags(cls, values):
+        logger.info("ParserConfig validation.")
         parsed_tags = values.parsed_tags
         tags = values.tags
         if len(parsed_tags) == 0 or len(tags) == 0:
-            raise ValueError('Neither parsed_tags nor tags can be empty.')
+            logger.error(
+                "ParserConfig validation failed: Either parsed_tags or tags is empty."
+                )
+            raise ValueError(
+                'Neither parsed_tags nor tags can be empty.'
+                )
         if len(parsed_tags) != len(tags):
-            raise ValueError('parsed_tags and tags must have the same length.')
+            logger.error(
+                "ParserConfig validation failed: parsed_tags and tags lengths mismatch."
+                )
+            raise ValueError(
+                'parsed_tags and tags must have the same length.'
+                )
         tag_type = type(tags[0])
         if not all(isinstance(tag, tag_type) for tag in tags):
-            raise ValueError('All objects in tags list must be of the same type.')
+            logger.error(
+                "ParserConfig validation failed: Not all tags have the same type."
+                )
+            raise ValueError(
+                'All objects in tags list must be of the same type.'
+                )
+        logger.info("ParserConfig validation done successfully.")
         return values
 
     def __repr__(self) -> str:

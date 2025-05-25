@@ -10,6 +10,7 @@ from DataIngestion import fetching_result
 from DataIngestion import parsing_configs
 from DataIngestion import parsing_tags
 from Internals import utils
+from Internals.logger import logger
 from CustomExceptions import fetch_exceptions
 from CustomExceptions import parse_exceptions
 
@@ -54,7 +55,7 @@ class BS4Parser(pydantic.BaseModel,ParserI):
         Raises:
             FailedFatchingError: If data fetch was unsuccessful.
             TypeError: If any tag in parser_config.tags is not of type BS4Tag.
-            BS4ParsingError: .
+            BS4ParsingError: If data parsing fails.
 
         """
         utils.validate_dtypes(
@@ -71,17 +72,41 @@ class BS4Parser(pydantic.BaseModel,ParserI):
                 parsing_configs.ParserConfig
                 ]
                 )
+        logger.info("BS4Parser parsing data from %s", website_response.url)
         if website_response.success == False:
-            raise fetch_exceptions.FailedFatchingError("Cannot parse HTML: website_response.success is False.")
+            logger.error(
+                "BS4Praser failed parsing data from %s: Data fatching failed.", website_response.url
+                )
+            raise fetch_exceptions.FatchingError(
+                f"BS4Parser cannot parse HTML from {website_response.url}: website_response.success is False."
+                )
         if not all(isinstance(tag, parsing_tags.BS4Tag) for tag in parser_config.tags):
-            raise TypeError("All tags in parser_config must be instances of BS4Tag.")
+            msg = "All tags in parser config must be instances of BS4Tag."
+            logger.error(
+                "BS4 Parser failed parsing data from %s: %s",
+                website_response.url,
+                msg
+                )
+            raise TypeError(msg)
         try:
             soup = BeautifulSoup(website_response.data, self.parser)
-            parsed_data = {}
+            parsed_data_dict = {}
             for parsed_tag, tag in parser_config:
                 name, attrs, recursive, limit = tag.construct().values()
-                parsed_data[parsed_tag] = soup.find_all(name=name, attrs=attrs, recursive=recursive, limit=limit)
-            return parsing_configs.ParsedData(url=website_response.url, parsed_data=parsed_data)
+                parsed_data_dict[parsed_tag] = soup.find_all(name=name, 
+                                                        attrs=attrs, 
+                                                        recursive=recursive, 
+                                                        limit=limit
+                                                        )
+            parsed_data = parsing_configs.ParsedData(url=website_response.url, 
+                                                     parsed_data=parsed_data_dict
+                                                     )
+            logger.info(
+                "BS4Parser successfully parsed data from %s", website_response.url
+                )
+            return parsed_data
         except Exception as e:
-            raise parse_exceptions.BS4ParsingError(message=f"BS4Parser failed to parse content from {website_response.url}: {e}")
+            msg = f"BS4Parser failed to parse content from {website_response.url}"
+            logger.exception(msg)
+            raise parse_exceptions.BS4ParsingError(msg) from e
 
