@@ -58,7 +58,7 @@ class RequestsImageLoader(pydantic.BaseModel, ImageLoaderI):
     @override
     def load(
             self, 
-            url: str, 
+            img_url: str, 
             handle_exception: bool = True,
             params: dict = None, 
             headers: dict = None, 
@@ -83,36 +83,36 @@ class RequestsImageLoader(pydantic.BaseModel, ImageLoaderI):
         Returns:
             LoadedImage or None: LoadedImage instance on success, None if failure and handle_exception is True.
         """
-        logger.info(f"RequestsImageLoader loading image from {url}")
+        logger.info(f"RequestsImageLoader loading image from {img_url}")
         utils.validate_dtypes(
-            inputs=[url], 
-            input_names=['url'], 
+            inputs=[img_url], 
+            input_names=['img_url'], 
             required_dtypes=[str]
             )
-        if not url.startswith('http'):
+        if not img_url.startswith('http'):
             if handle_exception:
                 return None
             raise ValueError("URL must start with http/https.")
-        image_responce = self.fetcher.fetch(url=url, 
+        image_responce = self.fetcher.fetch(url=img_url, 
                                             params=params, 
                                             headers=headers, 
                                             cookies=cookies, 
                                             meta_data=meta_data
                                             )
         if image_responce.success is False:
-            msg = "RequestsImageLoader cannot load image from {url}: website_response.success is False."
+            msg = "RequestsImageLoader cannot load image from {img_url}: website_response.success is False."
             logger.error(msg)
             if handle_exception:
                 return None
             raise fetch_exceptions.FatchingError(msg) from e
         try:
-            loaded_image = LoadedImage(url=url, 
+            loaded_image = LoadedImage(url=img_url, 
                                        image=Image.open(BytesIO(image_responce.response.content))
                                        )
-            logger.info(f"RequestsImageLoader successfully loaded image from {url}")
+            logger.info(f"RequestsImageLoader successfully loaded image from {img_url}")
             return loaded_image
         except Exception as e:
-            msg = f"RequestsImageLoader failed to load image from {url}"
+            msg = f"RequestsImageLoader failed to load image from {img_url}"
             logger.exception(msg)
             if handle_exception:
                 return None

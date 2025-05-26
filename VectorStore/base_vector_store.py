@@ -1,27 +1,33 @@
 
-import numpy as np
-from abc import ABC, abstractmethod
- 
-from schema import BaseDocument
+from typing import Protocol, runtime_checkable
 
-class VectorStoreI(ABC):
+import numpy as np
+ 
+from Schema.schema import BaseDocument
+
+@runtime_checkable
+class VectorStoreI(Protocol):
     """Interface class for VectorStore."""
-    @abstractmethod
+
+    def __init__(self, persist_directory: str):
+        ...
+
     def add_documents(self, 
                       documents: list[BaseDocument], 
                       embeddings: np.ndarray
                       ) -> None:
             ...
-
-    @abstractmethod
-    def clean(self) -> None:
-         ...
     
-    @abstractmethod
     def similarity_search(self, 
                           qeury: str, 
                           k: int, 
                           *args, 
                           **kwargs
                           ) -> list[BaseDocument]:
+        ...
+
+    def save(self) -> None:
+     ...
+     
+    def load(self, vectorestore_path: str) ->  None:
         ...

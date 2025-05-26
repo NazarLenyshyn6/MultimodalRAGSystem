@@ -2,7 +2,7 @@
 from typing import List
 from dataclasses import dataclass, field
 
-from schema import BaseDocument
+from Schema.schema import BaseDocument
 
 @dataclass
 class RAGLLMResponse:

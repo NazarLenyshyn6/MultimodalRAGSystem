@@ -16,10 +16,10 @@ from CustomExceptions import parse_exceptions
 
 
 class ParserI(ABC):
-    """Interface for text parsers that extract structured data from raw website content."""
+    """Interface for text parsers that parse structured data from raw website content."""
 
     @abstractmethod
-    def extract(
+    def parse(
         self, 
         website_responce: fetching_result.FetchResultI, 
         parser_config: parsing_configs.ParserConfig
@@ -28,7 +28,7 @@ class ParserI(ABC):
 
 
 class BS4Parser(pydantic.BaseModel,ParserI):
-    """Concrete implementation of TextParserI using BeautifulSoup4 to extract HTML content.
+    """Concrete implementation of TextParserI using BeautifulSoup4 to parse HTML content.
 
     Attributes:
         parser : The backend parser to use with BeautifulSoup. Defaults to 'html.parser'.
@@ -40,13 +40,13 @@ class BS4Parser(pydantic.BaseModel,ParserI):
     parser: Literal['html.parser', 'lxml', 'html5lib'] = pydantic.Field(default='html.parser')
 
     @override
-    def extract(
+    def parse(
         self, 
         website_response: fetching_result.FetchResultI, 
         parser_config: parsing_configs.ParserConfig
         ) -> parsing_configs.ParsedData:
         """
-        Extracts tagged content from HTML using BeautifulSoup based on the parsing configuration.
+        parses tagged content from HTML using BeautifulSoup based on the parsing configuration.
 
         Args:
             website_response : FetchResultI object containing fetching results.

@@ -1,5 +1,9 @@
+CustomExceptions
 DataIngestion
 Embedding
 Internals
+LLM
 Preprocessing
+Schema
+TheBatch
 VectorStore

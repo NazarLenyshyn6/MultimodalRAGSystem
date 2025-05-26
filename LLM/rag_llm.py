@@ -8,7 +8,7 @@ from langchain_core.prompts.prompt import PromptTemplate
 
 from VectorStore import base_vector_store
 from LLM.llm_response import RAGLLMResponse
-from schema import BaseDocument
+from Schema.schema import BaseDocument
 from Internals.logger import logger
 from CustomExceptions import llm_exceptions
 

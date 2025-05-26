@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import pydantic
 
-import schema
+import Schema.schema as schema
 from Internals.utils import generate_unique_doc_id
 from Internals.utils import validate_dtypes
 from Internals.logger import logger

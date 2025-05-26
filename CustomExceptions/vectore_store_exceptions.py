@@ -11,3 +11,6 @@ class VectoreStoreCleaningError(BaseException):
 
 class VectoreStoreInitializationError(BaseException):
     ...
+
+class VectoreStoreSavingError(BaseException):
+    ...

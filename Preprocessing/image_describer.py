@@ -9,7 +9,7 @@ from transformers import BlipProcessor, BlipForConditionalGeneration
 import torch
 
 from Preprocessing import image_loaders
-from schema import ImageDocument
+from Schema.schema import ImageDocument
 from Internals import utils
 from Internals.logger import logger
 from CustomExceptions import preprocessing_exceptions

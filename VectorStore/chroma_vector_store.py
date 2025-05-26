@@ -10,7 +10,7 @@ from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain.schema import Document
 from langchain.embeddings.base import Embeddings
 
-import schema
+import Schema.schema as schema
 from VectorStore import base_vector_store
 from Internals import adapters
 from Internals import utils
@@ -19,7 +19,7 @@ from CustomExceptions import vectore_store_exceptions
 
 ToBaseDocument =  Callable[[Document], schema.BaseDocument]
 
-class ChromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
+class ChromaVectorStore(pydantic.BaseModel):
     """Vector Store implementation using Chroma, supporting multiple document types with embeddings.
 
     Attributes:
@@ -55,13 +55,15 @@ class ChromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
     collection_name: str
     embedding_function: Union[adapters.ChromaTextEmbeddingAdapter, Embeddings]
     vectorstore: Optional[Chroma] = pydantic.Field(default=None, repr=False)
+    persist_directory: str
     retriver: Optional[VectorStoreRetriever] =  pydantic.Field(default=None)
     search_type: Literal['similarity', 'mmr'] = pydantic.Field(default='similarity')
 
     def model_post_init(self, context):
         try:
             self.vectorstore = Chroma(embedding_function=self.embedding_function,
-                                      collection_name=self.collection_name)
+                                      collection_name=self.collection_name,
+                                      persist_directory=self.persist_directory)
         except Exception as e:
             msg = (f"ChromaVectorStore initialization failed due to error in Chroma initialization."
                    f"Embedding function: {self.embedding_function}"
@@ -210,3 +212,55 @@ class ChromaVectorStore(base_vector_store.VectorStoreI, pydantic.BaseModel):
             msg = f"ChoromaVectorStore failed similarity search for query: {query}"
             logger.exception(msg)
             raise vectore_store_exceptions.SimilaritySerachError(msg) from e
+        
+    @override
+    def save(self) -> None:
+        """ Saves the current state of the Chroma vector store to disk at the specified path.
+
+        Args:
+            vectorestore_path: The file system path where the vector store state should be saved.
+
+        Raises:
+            TypeError: If `vectorestore_path` is not a string.
+            VectoreStoreSavingError: If saving the vector store fails due to an internal error.
+        """
+        try:
+            logger.info(f"Saving ChromaVectoreStore to path: {self.persist_directory}")
+            self.vectorstore.persist()
+            logger.info(f"ChromaVectoreStore successfully saved to {self.persist_directory}")
+        except Exception as e:
+            msg = f"ChromaVectoreStore failed to save to {self.persist_directory}."
+            logger.exception(msg)
+            raise vectore_store_exceptions.VectoreStoreSavingError(msg) from e
+
+    @override
+    def load(self, vectorestore_path: str) -> None:
+        """ Loads a Chroma vector store from disk at the specified path and initializes internal structures.
+
+        Args:
+            vectorestore_path (str): The file system path from which to load the vector store state.
+
+        Raises:
+            TypeError: If `vectorestore_path` is not a string.
+            VectoreStoreLoadingError: If loading the vector store fails due to an internal error.
+        """
+        utils.validate_dtypes(
+            inputs=[vectorestore_path],
+            input_names=['vectorestore_path'],
+            required_dtypes=[str]
+        )
+        try:
+            logger.info(f"Loading ChromaVectoreStore from path: {vectorestore_path}")
+            self.vectorstore = Chroma(
+                embedding_function=self.embedding_function,
+                collection_name=self.collection_name,
+                persist_directory=vectorestore_path
+            )
+            self.retriver = self.vectorstore.as_retriever(search_type=self.search_type)
+            self.persist_directory = vectorestore_path
+            logger.info("ChromaVectore persist  directory changed to %s", vectorestore_path)
+            logger.info(f"ChromaVectoreStore successfully loaded from {vectorestore_path}")
+        except Exception as e:
+            msg = f"ChromaVectoreStore failed to load from {vectorestore_path}."
+            logger.exception(msg)
+            raise vectore_store_exceptions.VectoreStoreLoadingError(msg) from e
