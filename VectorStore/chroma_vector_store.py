@@ -1,4 +1,4 @@
-"""."""
+"""Chroma-based VectorStore supporting multiple document types with embeddings, retrieval, and persistence."""
 
 from typing import ClassVar, Optional, List,  Callable, Union, Literal
 from typing_extensions import override

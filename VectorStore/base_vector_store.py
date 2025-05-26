@@ -1,3 +1,4 @@
+"""Defines an interface protocol for custom vector stores supporting document addition, similarity search, and persistence."""
 
 from typing import Protocol, runtime_checkable
 
@@ -7,7 +8,7 @@ from Schema.schema import BaseDocument
 
 @runtime_checkable
 class VectorStoreI(Protocol):
-    """Interface class for VectorStore."""
+    """Interface class for custom VectorStore."""
 
     def __init__(self, persist_directory: str):
         ...
