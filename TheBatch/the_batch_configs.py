@@ -1,3 +1,6 @@
+"""Configuration module for TheBatch system, including fetchers, parsers, tag mappings, and vectorstore paths."""
+
+from pathlib import Path
 
 from langchain.prompts import PromptTemplate
 
@@ -6,11 +9,16 @@ from DataIngestion import parsers
 from DataIngestion import parsing_tags
 from DataIngestion import parsing_configs
 
-THE_BATCH_ULRS_PATH = r"C:\Users\User\Desktop\MultimodalRAGSystem\TheBatch\the_batch_urls.txt"
+# Cross-platform base directory
+BASE_DIR = Path(__file__).resolve().parent
+
+# Paths
+
+THE_BATCH_URLS_PATH = (BASE_DIR / "Store" / "the_batch_urls.txt").as_posix()
 COLLECTION_NAME = "TheBatch"
-TEH_BATCH_VECTORESTORE_PERSIST_DIR = r"C:\Users\User\Desktop\MultimodalRAGSystem\TheBatch\the_batch_vectorestore_persist_dir"
-THE_BATCH_IMAGE_DOCUMENTS_STORE = r"C:\Users\User\Desktop\MultimodalRAGSystem\TheBatch\the_batch_image_documents_store.json"
-CREATE_VECTORESTORE = False  
+THE_BATCH_VECTORESTORE_PERSIST_DIR = (BASE_DIR  / "Store" / "the_batch_vectorestore_persist_dir").as_posix()
+THE_BATCH_IMAGE_DOCUMENTS_STORE = (BASE_DIR  / "Store" / "the_batch_image_documents_store.json").as_posix()
+CREATE_VECTORESTORE = False
 
 fetcher = fetch.RequestsFetcher()
 parser = parsers.BS4Parser()
@@ -61,6 +69,5 @@ Instructions:
 "The information provided from TheBatch is insufficient to fully answer this question."
 """
 )
-
 
 

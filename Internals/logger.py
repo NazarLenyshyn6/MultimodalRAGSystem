@@ -9,4 +9,4 @@ logging.basicConfig(level=logging.INFO,
                     format=LOGGING_FORMAT,
                     handlers=[logging.StreamHandler()])
 
-logger = logging.getLogger('TheBatchMultimodalRAGLogger')
+logger = logging.getLogger(name='TheBatchMultimodalRAGLogger')

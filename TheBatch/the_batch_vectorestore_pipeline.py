@@ -1,8 +1,10 @@
+"""Module to create and manage TheBatch Chroma vectorstore with preprocessed text and image documents."""
+
 import numpy as np
 from pathlib import Path
 
-from TheBatch.the_batch_data_loader import TheBatchDataLoader
-from TheBatch.the_batch_preprocessor import TheBatchPreprocessor
+from TheBatch.Preprocessing.the_batch_data_loader import TheBatchDataLoader
+from TheBatch.Preprocessing.the_batch_preprocessor import TheBatchPreprocessor
 from Embedding.text_embedding import SentenceTransformerTextEmbedding
 from VectorStore.chroma_vector_store import ChromaVectorStore
 from Internals.adapters import ChromaTextEmbeddingAdapter
@@ -10,14 +12,14 @@ from Internals.logger import logger
 from Schema.schema import ImageDocument
 from Internals.utils import save_image_documents_to_json
 from TheBatch.the_batch_configs import (THE_BATCH_IMAGE_DOCUMENTS_STORE, 
-                                        THE_BATCH_ULRS_PATH, 
-                                        TEH_BATCH_VECTORESTORE_PERSIST_DIR, 
+                                        THE_BATCH_URLS_PATH, 
+                                        THE_BATCH_VECTORESTORE_PERSIST_DIR, 
                                         CREATE_VECTORESTORE, 
                                         COLLECTION_NAME)
 
 def create_the_batch_vectorestore():
     # Load The Batch urls
-    with open(THE_BATCH_ULRS_PATH) as f:
+    with open(THE_BATCH_URLS_PATH) as f:
         the_batch_urls = f.readlines()
     the_batch_urls = [url.strip() for url in the_batch_urls]
 
@@ -50,7 +52,7 @@ def create_the_batch_vectorestore():
     vectorstore = ChromaVectorStore(
         embedding_function=adapted_embedding,
         collection_name=COLLECTION_NAME,
-        persist_directory=TEH_BATCH_VECTORESTORE_PERSIST_DIR
+        persist_directory=THE_BATCH_VECTORESTORE_PERSIST_DIR
     )
 
     # Add documents and embeddings
@@ -68,7 +70,7 @@ def load_the_batch_vectorestore():
     vectorstore = ChromaVectorStore(
         embedding_function=adapted_embedding,
         collection_name=COLLECTION_NAME,
-        persist_directory=TEH_BATCH_VECTORESTORE_PERSIST_DIR
+        persist_directory=THE_BATCH_VECTORESTORE_PERSIST_DIR
     )
     return vectorstore
 
