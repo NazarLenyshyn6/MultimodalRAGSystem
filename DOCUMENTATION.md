@@ -1,1 +1,0 @@
-# Documentation for "Multimodal RAG System for TheBatch"
