@@ -1,3 +1,5 @@
+"""Defines structured document models for multimodal data with medata support."""
+
 from typing import Literal, Optional, Protocol, runtime_checkable, Union, Dict, Any, Union, ClassVar
 
 import pydantic
