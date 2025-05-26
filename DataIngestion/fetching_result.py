@@ -1,4 +1,4 @@
-"""Data transfer objects for encapsulating the results of website fetch operations."""
+"""Defines data transfer objects (DTOs) for encapsulating results of website fetch operations."""
 
 from typing import Optional, Any, Protocol, runtime_checkable
 from datetime import datetime

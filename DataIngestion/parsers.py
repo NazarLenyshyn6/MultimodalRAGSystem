@@ -1,3 +1,5 @@
+"""Defines interfaces and implementations for parsing structured data from fetched website content."""
+
 
 from typing import Literal
 from typing_extensions import override

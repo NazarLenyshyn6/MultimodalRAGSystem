@@ -1,4 +1,5 @@
-"""."""
+"""Provides an interface and a requests-based implementation for fetching web content."""
+
 
 from typing import Any, Union, Tuple
 from abc import ABC, abstractmethod

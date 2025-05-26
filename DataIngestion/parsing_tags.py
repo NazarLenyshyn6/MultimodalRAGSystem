@@ -1,3 +1,6 @@
+"""Defines configuration and result data classes for text parsing of HTML content."""
+
+
 from typing import Dict, Union, Literal, Optional
 from typing_extensions import override
 from abc import ABC, abstractmethod
