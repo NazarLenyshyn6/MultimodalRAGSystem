@@ -1,4 +1,4 @@
-
+"""Module for vector dimensionality reduction."""
 
 from typing_extensions import override
 from abc import ABC, abstractmethod

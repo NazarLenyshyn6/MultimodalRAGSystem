@@ -1,3 +1,5 @@
+"""Module for generating text embeddings."""
+
 
 from typing import List
 from typing_extensions import override

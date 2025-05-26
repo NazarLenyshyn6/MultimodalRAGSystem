@@ -1,3 +1,5 @@
+"""Module for generating image."""
+
 
 from typing import List, Optional
 from typing_extensions import override
