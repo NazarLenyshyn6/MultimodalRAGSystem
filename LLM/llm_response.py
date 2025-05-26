@@ -1,3 +1,4 @@
+"""Defines the data structure for RAG LLM model responses."""
 
 from typing import List
 from dataclasses import dataclass, field

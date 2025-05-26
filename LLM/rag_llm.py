@@ -1,3 +1,4 @@
+""""Defines the RAG LLM interface and concrete implementatinos."""
 
 from typing import Protocol, runtime_checkable, List
 
