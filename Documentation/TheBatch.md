@@ -55,3 +55,6 @@ This module handles the creation and loading of a Chroma vectorstore for TheBatc
 - Embedding: Generates documents embeddings using a SentenceTransformerTextEmbedding model.
 
 - Chroma vectorstore: Stores preprocessed documents and embeddings in a persistent vectorstore for semantic search and RAG use cases.
+
+# the_batch_app.py
+This module implements a Streamlit-based multimodal news assistant that allows users to ask questions and get responses with relevant text and images from TheBatch site using a pretrained LLM and an image document store. It maintains a chat interface, displays messages, handles image retrieval, and offers error handling and chat reset functionality.

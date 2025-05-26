@@ -37,8 +37,16 @@ Preprocessing/text_spitting.py
 Schema/__init__.py
 Schema/schema.py
 TheBatch/__init__.py
+TheBatch/the_batch_app.py
 TheBatch/the_batch_configs.py
-TheBatch/the_batch_data_loader.py
+TheBatch/the_batch_exceptions.py
+TheBatch/the_batch_vectorestore_pipeline.py
+TheBatch/LLM/__init__.py
+TheBatch/LLM/the_batch_llms.py
+TheBatch/LLM/the_batch_trained_llms.py
+TheBatch/Preprocessing/__init__.py
+TheBatch/Preprocessing/the_batch_data_loader.py
+TheBatch/Preprocessing/the_batch_preprocessor.py
 VectorStore/__init__.py
 VectorStore/base_vector_store.py
 VectorStore/chroma_vector_store.py
