@@ -7,19 +7,19 @@ from Embedding.text_embedding import SentenceTransformerTextEmbedding
 from VectorStore.chroma_vector_store import ChromaVectorStore
 from Internals.adapters import ChromaTextEmbeddingAdapter
 from Internals.logger import logger
-
-
-# Config
-THE_BATCH_ULRS_PATH = r"C:\Users\User\Desktop\MultimodalRAGSystem\TheBatch\the_batch_urls.txt"
-COLLECTION_NAME = "TheBatch"
-TEH_BATCH_PERSIST_DIR = r"C:\Users\User\Desktop\MultimodalRAGSystem\TheBatch\the_batch_vectorestore_persist_dir"
-CREATE = False  
+from Schema.schema import ImageDocument
+from Internals.utils import save_image_documents_to_json
+from TheBatch.the_batch_configs import (THE_BATCH_IMAGE_DOCUMENTS_STORE, 
+                                        THE_BATCH_ULRS_PATH, 
+                                        TEH_BATCH_VECTORESTORE_PERSIST_DIR, 
+                                        CREATE_VECTORESTORE, 
+                                        COLLECTION_NAME)
 
 def create_the_batch_vectorestore():
     # Load The Batch urls
     with open(THE_BATCH_ULRS_PATH) as f:
         the_batch_urls = f.readlines()
-    the_batch_urls = [url.strip() for url in the_batch_urls][:3]
+    the_batch_urls = [url.strip() for url in the_batch_urls]
 
     # Load data
     loader = TheBatchDataLoader()
@@ -37,6 +37,10 @@ def create_the_batch_vectorestore():
         )
         documents.extend(processed_docs)
 
+    # Save ImageDocuments
+    image_documents = {doc.id: doc for doc in documents if isinstance(doc, ImageDocument)}
+    save_image_documents_to_json(image_documents, THE_BATCH_IMAGE_DOCUMENTS_STORE)
+
     # Embedding
     embedding_function = SentenceTransformerTextEmbedding()
     embeddings = np.vstack([embedding_function.encode([doc.content]) for doc in documents])
@@ -46,7 +50,7 @@ def create_the_batch_vectorestore():
     vectorstore = ChromaVectorStore(
         embedding_function=adapted_embedding,
         collection_name=COLLECTION_NAME,
-        persist_directory=TEH_BATCH_PERSIST_DIR
+        persist_directory=TEH_BATCH_VECTORESTORE_PERSIST_DIR
     )
 
     # Add documents and embeddings
@@ -64,13 +68,13 @@ def load_the_batch_vectorestore():
     vectorstore = ChromaVectorStore(
         embedding_function=adapted_embedding,
         collection_name=COLLECTION_NAME,
-        persist_directory=TEH_BATCH_PERSIST_DIR
+        persist_directory=TEH_BATCH_VECTORESTORE_PERSIST_DIR
     )
     return vectorstore
 
 
 # Main logic
-if CREATE is True:
+if CREATE_VECTORESTORE is True:
     logger.info("Creating TheBatch vectore store.")
     the_batch_vectorestore = create_the_batch_vectorestore()
     logger.info("TheBatch vectorestore successfully created and saved.")
