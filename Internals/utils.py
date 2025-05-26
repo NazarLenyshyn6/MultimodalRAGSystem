@@ -1,4 +1,4 @@
-"""Contains different utility functions."""  
+"""Utility functions."""  
 
 from typing import Dict
 import hashlib

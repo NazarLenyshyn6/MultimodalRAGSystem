@@ -1,4 +1,5 @@
-"""Project logger."""
+"""Configures and provides a centralized logger for the project."""
+
 
 import logging
 
@@ -8,4 +9,4 @@ logging.basicConfig(level=logging.INFO,
                     format=LOGGING_FORMAT,
                     handlers=[logging.StreamHandler()])
 
-logger = logging.getLogger('python_pytorch_profiling_logger')
+logger = logging.getLogger('TheBatchMultimodalRAGLogger')

@@ -1,4 +1,5 @@
-"""."""
+"""Module containing adapter classes to integrate internal implementations with external interfaces."""
+
 
 import pydantic
 import numpy as np
