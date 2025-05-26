@@ -1,4 +1,4 @@
-"""."""
+"""Implements an image description interface and concrete implementations."""
 
 from typing import Optional
 from typing_extensions import override

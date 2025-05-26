@@ -1,3 +1,4 @@
+"""Defines interfaces and concrete implementations for loading images from URLs"""
 
 from  typing_extensions import override
 from abc import ABC, abstractmethod

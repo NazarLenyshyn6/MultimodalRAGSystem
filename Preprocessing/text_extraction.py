@@ -1,4 +1,4 @@
-
+"""Provides an interface and concrete implementations for extracting and concatenating text from HTML tags."""
 
 from typing_extensions import override
 from typing import List, Any

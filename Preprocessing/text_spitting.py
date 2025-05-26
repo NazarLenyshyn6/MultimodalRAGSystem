@@ -1,3 +1,4 @@
+"""Provides an interface and concrete implementations for splitting large text into smaller chunks."""
 
 from typing import List
 from typing_extensions import override
